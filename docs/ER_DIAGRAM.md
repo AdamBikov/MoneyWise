@@ -1,22 +1,67 @@
 # ER диаграма (начална и текуща)
 
+![ER диаграма](screens/er_diagram.png)
+
 ```mermaid
 erDiagram
-  AUTH_USERS ||--|| PROFILES : "has one"
-  AUTH_USERS ||--o{ CATEGORIES : owns
-  AUTH_USERS ||--o{ TRANSACTIONS : owns
-  AUTH_USERS ||--o{ BUDGETS : owns
-  AUTH_USERS ||--o{ SAVINGS_GOALS : owns
-  CATEGORIES ||--o{ TRANSACTIONS : classifies
-  CATEGORIES ||--o| BUDGETS : "limited by"
-  SAVINGS_GOALS ||--o{ GOAL_CONTRIBUTIONS : receives
+  AUTH_USERS ||--|| PROFILES : "има профил"
+  AUTH_USERS ||--o{ CATEGORIES : "притежава"
+  AUTH_USERS ||--o{ TRANSACTIONS : "притежава"
+  AUTH_USERS ||--o{ BUDGETS : "притежава"
+  AUTH_USERS ||--o{ SAVINGS_GOALS : "притежава"
+  CATEGORIES ||--o{ TRANSACTIONS : "класифицира"
+  CATEGORIES ||--o| BUDGETS : "има лимит"
+  SAVINGS_GOALS ||--o{ GOAL_CONTRIBUTIONS : "получава"
 
-  PROFILES { uuid id PK "= auth.users.id"; text display_name; text role "student|teacher|admin"; text locale "bg|en"; text currency "EUR" }
-  CATEGORIES { uuid id PK; uuid user_id FK; text key; text kind "expense|income"; text name_bg; text name_en; text icon; text color; text keywords }
-  TRANSACTIONS { uuid id PK; uuid user_id FK; uuid category_id FK; text type; numeric amount "CHECK > 0"; text note; date tx_date }
-  BUDGETS { uuid id PK; uuid user_id FK; uuid category_id FK "UNIQUE(user,cat)"; numeric limit_amount "CHECK > 0" }
-  SAVINGS_GOALS { uuid id PK; uuid user_id FK; text name; numeric target_amount; numeric saved_amount; date deadline; smallint priority "1..3" }
-  GOAL_CONTRIBUTIONS { uuid id PK; uuid user_id FK; uuid goal_id FK; numeric amount; date contributed_at }
+  PROFILES {
+    uuid id PK
+    text display_name
+    text role
+    text locale
+    text currency
+  }
+  CATEGORIES {
+    uuid id PK
+    uuid user_id FK
+    text key
+    text kind
+    text name_bg
+    text name_en
+    text icon
+    text color
+    text keywords
+  }
+  TRANSACTIONS {
+    uuid id PK
+    uuid user_id FK
+    uuid category_id FK
+    text type
+    numeric amount
+    text note
+    date tx_date
+  }
+  BUDGETS {
+    uuid id PK
+    uuid user_id FK
+    uuid category_id FK
+    numeric limit_amount
+  }
+  SAVINGS_GOALS {
+    uuid id PK
+    uuid user_id FK
+    text name
+    numeric target_amount
+    numeric saved_amount
+    date deadline
+    smallint priority
+  }
+  GOAL_CONTRIBUTIONS {
+    uuid id PK
+    uuid user_id FK
+    uuid goal_id FK
+    numeric amount
+    date contributed_at
+  }
 ```
 
 ## Описание на таблиците

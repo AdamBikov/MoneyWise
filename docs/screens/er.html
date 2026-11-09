@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff;padding:20px"><pre class="mermaid">erDiagram
+  AUTH_USERS ||--|| PROFILES : "има профил"
+  AUTH_USERS ||--o{ CATEGORIES : "притежава"
+  AUTH_USERS ||--o{ TRANSACTIONS : "притежава"
+  AUTH_USERS ||--o{ BUDGETS : "притежава"
+  AUTH_USERS ||--o{ SAVINGS_GOALS : "притежава"
+  CATEGORIES ||--o{ TRANSACTIONS : "класифицира"
+  CATEGORIES ||--o| BUDGETS : "има лимит"
+  SAVINGS_GOALS ||--o{ GOAL_CONTRIBUTIONS : "получава"
+
+  PROFILES {
+    uuid id PK
+    text display_name
+    text role
+    text locale
+    text currency
+  }
+  CATEGORIES {
+    uuid id PK
+    uuid user_id FK
+    text key
+    text kind
+    text name_bg
+    text name_en
+    text icon
+    text color
+    text keywords
+  }
+  TRANSACTIONS {
+    uuid id PK
+    uuid user_id FK
+    uuid category_id FK
+    text type
+    numeric amount
+    text note
+    date tx_date
+  }
+  BUDGETS {
+    uuid id PK
+    uuid user_id FK
+    uuid category_id FK
+    numeric limit_amount
+  }
+  SAVINGS_GOALS {
+    uuid id PK
+    uuid user_id FK
+    text name
+    numeric target_amount
+    numeric saved_amount
+    date deadline
+    smallint priority
+  }
+  GOAL_CONTRIBUTIONS {
+    uuid id PK
+    uuid user_id FK
+    uuid goal_id FK
+    numeric amount
+    date contributed_at
+  }
+</pre><script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script><script>mermaid.initialize({startOnLoad:true,theme:"neutral",er:{useMaxWidth:false}});</script>

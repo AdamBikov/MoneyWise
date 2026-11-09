@@ -101,7 +101,7 @@
         const bud = D().budgets, spentB = Algo.sum(bud.map(b => cur.byCat[b.category_id] || 0)), limB = Algo.sum(bud.map(b => +b.limit_amount));
         if (bud.length) { const left = Math.max(0, limB - spentB) / (fc.remainingDays + 1); ins.push(`<div class="ins"><span class="e">${I('info')}</span><div>${t('ins_daily', { v: fmt.money(left) })}</div></div>`); }
       }
-      Algo.budgetAlerts(cur.byCat, D().budgets, today, m).filter(r => r.status !== 'ok').sort((x, y) => y.pct - x.pct).slice(0, 3).forEach(r => {
+      Algo.budgetAlerts(cur.byCat, D().budgets, today, m).filter(r => r.status !== 'ok' && !(r.status === 'risk' && (cat(r.budget.category_id) || {}).key === 'housing')).sort((x, y) => y.pct - x.pct).slice(0, 3).forEach(r => {
         const c = catName(cat(r.budget.category_id));
         if (r.status === 'exceeded') ins.push(`<div class="ins bad"><span class="e">${I('alert')}</span><div>${t('ins_over', { c, v: fmt.money(r.spent - r.limit) })}</div></div>`);
         else if (r.status === 'risk') ins.push(`<div class="ins warn"><span class="e">${I('trenddown')}</span><div>${t('ins_risk', { c, d: r.exhaustDay || '—' })}</div></div>`);
@@ -199,7 +199,7 @@
           <button class="icon-btn" data-editb="${b.id}">${I('edit')}</button><button class="icon-btn" data-delb="${b.id}">${I('trash')}</button></div>
           <div class="prog ${cls}"><i style="width:${Math.min(100, p * 100)}%"></i></div>
           <div class="meta"><span>${fmt.money(sp_)} (${Math.round(p * 100)}%)</span><span>${p > 1 ? I('alert') + ' ' + t('over_by', { v: fmt.money(sp_ - lim) }) : t('left_of', { v: fmt.money(lim - sp_) })}</span></div>
-          ${isCurrent() && day > .1 && sp_ / day > lim && p <= 1 ? `<div class="sug">${I('trenddown')} ${t('pace_warn', { v: fmt.money(sp_ / day) })}</div>` : ''}</div>`;
+          ${isCurrent() && day > .1 && !(c && c.key === 'housing') && sp_ / day > lim && p <= 1 ? `<div class="sug">${I('trenddown')} ${t('pace_warn', { v: fmt.money(sp_ / day) })}</div>` : ''}</div>`;
       }).join('')}
       <button class="card tilt" id="addb" style="display:grid;place-items:center;min-height:150px;border-style:dashed;color:var(--muted);font-weight:800">${I('plus')} ${t('add_budget')}</button></div>
       ${free.length ? '' : ''}`;

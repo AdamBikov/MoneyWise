@@ -16,6 +16,7 @@
 html{scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
+body,svg text,button,input,select{font-feature-settings:"locl" 0;font-variant-ligatures:none}
 button{cursor:pointer;border:0;background:none}
 h1,h2,h3{font-family:var(--head);font-weight:800;letter-spacing:-.02em}
 .aurora{position:fixed;inset:0;z-index:-1;background:radial-gradient(900px 500px at 85% -10%,rgba(91,108,255,.10),transparent),var(--bg)}
