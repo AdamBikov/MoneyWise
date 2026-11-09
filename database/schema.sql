@@ -3,6 +3,25 @@
 
 create extension if not exists "pgcrypto";
 
+create table if not exists public.profiles (
+  id           uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  role         text not null default 'student' check (role in ('student','teacher','admin')),
+  locale       text not null default 'bg' check (locale in ('bg','en')),
+  currency     text not null default 'EUR' check (currency = 'EUR'),
+  created_at   timestamptz not null default now()
+);
+
+-- автоматично създаване на профил при регистрация
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, display_name) values (new.id, split_part(new.email, '@', 1)) on conflict do nothing;
+  return new;
+end $$;
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
+
 create table if not exists public.categories (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
@@ -36,7 +55,7 @@ create table if not exists public.budgets (
   unique (user_id, category_id)
 );
 
-create table if not exists public.goals (
+create table if not exists public.savings_goals (
   id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name          text not null,
@@ -51,7 +70,7 @@ create table if not exists public.goals (
 create table if not exists public.goal_contributions (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  goal_id        uuid not null references public.goals(id) on delete cascade,
+  goal_id        uuid not null references public.savings_goals(id) on delete cascade,
   amount         numeric(12,2) not null check (amount > 0),
   contributed_at date not null default current_date
 );
@@ -63,10 +82,10 @@ create index if not exists idx_tx_category  on public.transactions(category_id);
 do $$
 declare t text;
 begin
-  foreach t in array array['categories','transactions','budgets','goals','goal_contributions'] loop
+  foreach t in array array['profiles','categories','transactions','budgets','savings_goals','goal_contributions'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "own rows" on public.%I', t);
-    execute format('create policy "own rows" on public.%I for all using (user_id = auth.uid()) with check (user_id = auth.uid())', t);
+    execute format('create policy "own rows" on public.%I for all using (%I = auth.uid()) with check (%I = auth.uid())', t, case when t = 'profiles' then 'id' else 'user_id' end, case when t = 'profiles' then 'id' else 'user_id' end);
   end loop;
 end $$;
 

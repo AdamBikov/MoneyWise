@@ -1,6 +1,6 @@
 // Стартиране: node tests/algo.test.js
 const fs = require('fs'), assert = require('assert');
-const Algo = new Function(fs.readFileSync(__dirname + '/../js/algo.js', 'utf8') + '; return Algo;')();
+const Algo = new Function(fs.readFileSync(__dirname + '/../src/js/algo.js', 'utf8') + '; return Algo;')();
 let pass = 0; const ok = (n, f) => { try { f(); pass++; console.log('✔', n); } catch (e) { console.error('✘', n, '-', e.message); process.exitCode = 1; } };
 const cats = [{ id: 'h', key: 'housing', kind: 'expense' }, { id: 'f', key: 'food', kind: 'expense' }, { id: 's', key: 'salary', kind: 'income' }, { id: 'o', key: 'other', kind: 'expense', name_bg: 'Други', name_en: 'Other' }, { id: 'c', key: 'eatout', kind: 'expense', name_bg: 'Заведения', name_en: 'Eating out', keywords: 'кафе,coffee' }];
 const today = new Date(2026, 10, 15);
@@ -20,4 +20,11 @@ ok('parseQuick: expense + category keyword', () => { const p = Algo.parseQuick('
 ok('parseQuick: income with plus sign', () => { const p = Algo.parseQuick('+заплата 1800', cats); assert.equal(p.type, 'income'); assert.equal(p.amount, 1800); });
 ok('parseQuick: yesterday shifts date', () => { const p = Algo.parseQuick('coffee 3 yesterday', cats); const y = new Date(); y.setDate(y.getDate() - 1); assert.equal(p.tx_date, Algo.iso(y)); });
 ok('parseQuick: no number → null', () => assert.equal(Algo.parseQuick('кафе', cats), null));
+const B = [{ category_id: 'f', limit_amount: 300 }];
+ok('budgetAlerts: exceeded', () => assert.equal(Algo.budgetAlerts({ f: 320 }, B, today)[0].status, 'exceeded'));
+ok('budgetAlerts: risk by pace (160 on day 15 → 320 projected)', () => assert.equal(Algo.budgetAlerts({ f: 160 }, B, today)[0].status, 'risk'));
+ok('budgetAlerts: ok when pace is low', () => assert.equal(Algo.budgetAlerts({ f: 60 }, B, today)[0].status, 'ok'));
+ok('budgetAlerts: exhaust day = ceil(limit / (spent/day))', () => assert.equal(Algo.budgetAlerts({ f: 150 }, B, today)[0].exhaustDay, 30));
+ok('budgetAlerts: zero spent is safe, no exhaust day', () => { const r = Algo.budgetAlerts({}, B, today)[0]; assert.equal(r.status, 'ok'); assert.equal(r.exhaustDay, null); });
+ok('budgetAlerts: past month uses real total', () => assert.equal(Algo.budgetAlerts({ f: 299 }, B, today, '2026-09')[0].status, 'warning'));
 console.log(`\n${pass} passed`);

@@ -101,7 +101,12 @@
         const bud = D().budgets, spentB = Algo.sum(bud.map(b => cur.byCat[b.category_id] || 0)), limB = Algo.sum(bud.map(b => +b.limit_amount));
         if (bud.length) { const left = Math.max(0, limB - spentB) / (fc.remainingDays + 1); ins.push(`<div class="ins"><span class="e">💡</span><div>${t('ins_daily', { v: fmt.money(left) })}</div></div>`); }
       }
-      D().budgets.forEach(b => { const sp_ = cur.byCat[b.category_id] || 0, lim = +b.limit_amount; if (sp_ > lim) ins.push(`<div class="ins bad"><span class="e">🚨</span><div>${t('ins_over', { c: catName(cat(b.category_id)), v: fmt.money(sp_ - lim) })}</div></div>`); else if (sp_ > lim * .85) ins.push(`<div class="ins warn"><span class="e">⚠️</span><div>${t('ins_near', { c: catName(cat(b.category_id)), p: Math.round(sp_ / lim * 100) })}</div></div>`); });
+      Algo.budgetAlerts(cur.byCat, D().budgets, today, m).filter(r => r.status !== 'ok').sort((x, y) => y.pct - x.pct).slice(0, 3).forEach(r => {
+        const c = catName(cat(r.budget.category_id));
+        if (r.status === 'exceeded') ins.push(`<div class="ins bad"><span class="e">🚨</span><div>${t('ins_over', { c, v: fmt.money(r.spent - r.limit) })}</div></div>`);
+        else if (r.status === 'risk') ins.push(`<div class="ins warn"><span class="e">📉</span><div>${t('ins_risk', { c, d: r.exhaustDay || '—' })}</div></div>`);
+        else ins.push(`<div class="ins warn"><span class="e">⚠️</span><div>${t('ins_near', { c, p: Math.round(r.pct * 100) })}</div></div>`);
+      });
       Algo.anomalies(tx, cats, today).slice(0, 2).forEach(a => ins.push(`<div class="ins warn"><span class="e">🕵️</span><div>${t('ins_anom', { n: esc(txTitle(a.tx)), v: fmt.money(a.tx.amount), m: fmt.money(a.median) })}</div></div>`));
       if (cur.income > 0 && rate >= 20) ins.push(`<div class="ins good"><span class="e">🌟</span><div>${t('ins_save', { p: Math.round(rate) })}</div></div>`);
       if (!ins.length) ins.push(`<div class="ins"><span class="e">✨</span><div>${t('ins_none')}</div></div>`);

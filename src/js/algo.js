@@ -6,6 +6,7 @@
  *  3. allocate()   — „умно“ разпределение на спестяванията по цели (спешност × приоритет)
  *  4. anomalies()  — откриване на необичайни разходи (modified z-score с MAD)
  *  5. parseQuick() — разпознаване на естествен текст: „кафе 4.50“, „+заплата 1800“
+ *  6. budgetAlerts() — откриване на превишен/застрашен бюджет и ден на изчерпване
  */
 const Algo = (() => {
   const pad = n => String(n).padStart(2, '0');
@@ -180,5 +181,18 @@ const Algo = (() => {
     return { type, amount, category_id: best ? best.id : null, note, tx_date: iso(date), matched: bestLen > 0 };
   }
 
-  return { iso, ym, addMonths, daysIn, monthStats, forecast, health, allocate, anomalies, parseQuick, monthsUntil, median, sum, clamp };
+  /* 6. ПРЕВИШЕН БЮДЖЕТ — статус и ден на изчерпване (сложност O(B), B = брой бюджети) */
+  function budgetAlerts(byCat, budgets, today = new Date(), month = ym(today)) {
+    const dim = daysIn(month), cur = month === ym(today);
+    const d = cur ? today.getDate() : dim;
+    return budgets.map(b => {
+      const spent = byCat[b.category_id] || 0, limit = +b.limit_amount;
+      const projected = d >= dim ? spent : spent / Math.max(1, d) * dim;      // линейна проекция на темпа
+      const status = spent > limit ? 'exceeded' : projected > limit ? 'risk' : spent >= limit * 0.85 ? 'warning' : 'ok';
+      const exhaustDay = spent > 0 && spent <= limit ? Math.ceil(limit / (spent / Math.max(1, d))) : null;
+      return { budget: b, spent, limit, projected, status, exhaustDay: exhaustDay && exhaustDay <= dim ? exhaustDay : null, pct: limit ? spent / limit : 0 };
+    });
+  }
+
+  return { budgetAlerts, iso, ym, addMonths, daysIn, monthStats, forecast, health, allocate, anomalies, parseQuick, monthsUntil, median, sum, clamp };
 })();

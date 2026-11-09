@@ -1,6 +1,0 @@
--- Примерни записи за текущия потребител (изпълнява се след регистрация, в SQL Editor от името на потребителя
--- или чрез бутона „Зареди демо данни“ в приложението — препоръчително).
--- Replace the UUID below with your own auth.users id.
--- insert into categories (user_id,key,kind,name_bg,name_en,icon,color) values
---   ('<USER_ID>','food','expense','Храна','Groceries','🛒','#00e0b8'),
---   ('<USER_ID>','salary','income','Заплата','Salary','💼','#00e0b8');

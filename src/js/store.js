@@ -2,6 +2,7 @@
 const Store = (() => {
   const TABLES = ['categories', 'transactions', 'budgets', 'goals', 'goal_contributions'];
   const KEY = 'moneywise.v2';
+  const tbl = t => (t === 'goals' ? 'savings_goals' : t);   // вътрешно име 'goals' → таблица savings_goals
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
 
   const DEFAULT_CATS = [
@@ -87,7 +88,7 @@ const Store = (() => {
     persist() { if (this.mode === 'local') try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) {} },
     async loadAll() {
       for (const t of TABLES) {
-        const { data, error } = await this.sb.from(t).select('*');
+        const { data, error } = await this.sb.from(tbl(t)).select('*');
         if (error) throw error;
         this.data[t] = data || [];
       }
@@ -108,22 +109,22 @@ const Store = (() => {
     /* CRUD */
     async add(table, row) {
       row = { id: uuid(), ...row };
-      if (this.mode === 'cloud') { const r = { ...row, user_id: this.user.id }; const { error } = await this.sb.from(table).insert(r); if (error) throw error; row = r; }
+      if (this.mode === 'cloud') { const r = { ...row, user_id: this.user.id }; const { error } = await this.sb.from(tbl(table)).insert(r); if (error) throw error; row = r; }
       this.data[table].push(row); this.persist(); return row;
     },
     async update(table, id, patch) {
-      if (this.mode === 'cloud') { const { error } = await this.sb.from(table).update(patch).eq('id', id); if (error) throw error; }
+      if (this.mode === 'cloud') { const { error } = await this.sb.from(tbl(table)).update(patch).eq('id', id); if (error) throw error; }
       const row = this.data[table].find(r => r.id === id); Object.assign(row, patch); this.persist(); return row;
     },
     async remove(table, id) {
-      if (this.mode === 'cloud') { const { error } = await this.sb.from(table).delete().eq('id', id); if (error) throw error; }
+      if (this.mode === 'cloud') { const { error } = await this.sb.from(tbl(table)).delete().eq('id', id); if (error) throw error; }
       this.data[table] = this.data[table].filter(r => r.id !== id);
       if (table === 'categories') { this.data.transactions.forEach(x => { if (x.category_id === id) x.category_id = null; }); this.data.budgets = this.data.budgets.filter(b => b.category_id !== id); }
       if (table === 'goals') this.data.goal_contributions = this.data.goal_contributions.filter(c => c.goal_id !== id);
       this.persist();
     },
     async wipe(keepCategories = true) {
-      if (this.mode === 'cloud') for (const t of ['goal_contributions', 'goals', 'budgets', 'transactions']) { const { error } = await this.sb.from(t).delete().neq('id', '00000000-0000-0000-0000-000000000000'); if (error) throw error; }
+      if (this.mode === 'cloud') for (const t of ['goal_contributions', 'goals', 'budgets', 'transactions']) { const { error } = await this.sb.from(tbl(t)).delete().neq('id', '00000000-0000-0000-0000-000000000000'); if (error) throw error; }
       this.data.transactions = []; this.data.budgets = []; this.data.goals = []; this.data.goal_contributions = [];
       this.persist();
     },
@@ -136,7 +137,7 @@ const Store = (() => {
         d.transactions.forEach(x => x.category_id = map[x.category_id]); d.budgets.forEach(b => b.category_id = map[b.category_id]);
         const own = r => ({ ...r, user_id: this.user.id });
         for (const [t, rows] of [['transactions', d.transactions], ['budgets', d.budgets], ['goals', d.goals], ['goal_contributions', d.goal_contributions]]) {
-          const { error } = await this.sb.from(t).insert(rows.map(own)); if (error) throw error;
+          const { error } = await this.sb.from(tbl(t)).insert(rows.map(own)); if (error) throw error;
           this.data[t] = rows.map(own);
         }
       } else { this.data = d; this.persist(); }
