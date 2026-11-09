@@ -6,18 +6,18 @@ const Store = (() => {
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
 
   const DEFAULT_CATS = [
-    { key: 'food', kind: 'expense', icon: '🛒', color: '#00e0b8', name_bg: 'Храна', name_en: 'Groceries', keywords: 'lidl,billa,kaufland,магазин,супермаркет,grocer,market,fantastico,хляб,мляко' },
-    { key: 'eatout', kind: 'expense', icon: '🍔', color: '#ff8a3d', name_bg: 'Заведения', name_en: 'Eating out', keywords: 'кафе,кафене,кафета,пица,бургер,ресторант,restaurant,coffee,cafe,pizza,burger,bar,бира,доставка,glovo,takeaway' },
-    { key: 'transport', kind: 'expense', icon: '🚌', color: '#4ea1ff', name_bg: 'Транспорт', name_en: 'Transport', keywords: 'бензин,гориво,автобус,метро,такси,uber,bolt,fuel,gas,shell,bus,taxi,паркинг,parking,билет' },
-    { key: 'housing', kind: 'expense', icon: '🏠', color: '#7c5cff', name_bg: 'Жилище и сметки', name_en: 'Housing & bills', keywords: 'наем,ток,вода,парно,интернет,rent,electric,water,internet,bills,сметка,сметки' },
-    { key: 'fun', kind: 'expense', icon: '🎮', color: '#ff5c8a', name_bg: 'Забавления', name_en: 'Entertainment', keywords: 'кино,игра,netflix,spotify,cinema,movie,game,steam,концерт,concert,playstation,hbo' },
-    { key: 'health', kind: 'expense', icon: '💊', color: '#ff6b6b', name_bg: 'Здраве', name_en: 'Health', keywords: 'аптека,лекар,зъболекар,pharmacy,doctor,dentist,витамини,фитнес,gym' },
-    { key: 'shopping', kind: 'expense', icon: '🛍️', color: '#e06bff', name_bg: 'Пазаруване', name_en: 'Shopping', keywords: 'дрехи,обувки,amazon,zara,clothes,shoes,shopping,техника,слушалки,electronics' },
-    { key: 'education', kind: 'expense', icon: '📚', color: '#ffc857', name_bg: 'Образование', name_en: 'Education', keywords: 'книга,курс,учебник,book,course,udemy,school,университет,такса' },
-    { key: 'other', kind: 'expense', icon: '🧾', color: '#8e97c4', name_bg: 'Други', name_en: 'Other', keywords: 'друго,other' },
-    { key: 'salary', kind: 'income', icon: '💼', color: '#00e0b8', name_bg: 'Заплата', name_en: 'Salary', keywords: 'заплата,работа,salary,wage,payroll' },
-    { key: 'freelance', kind: 'income', icon: '💻', color: '#6be3ff', name_bg: 'Фрийланс', name_en: 'Freelance', keywords: 'фрийланс,проект,freelance,project,клиент,client' },
-    { key: 'gift', kind: 'income', icon: '🎁', color: '#ffc857', name_bg: 'Подаръци', name_en: 'Gifts', keywords: 'подарък,gift,бонус,bonus,джоб' },
+    { key: 'food', kind: 'expense', icon: 'cart', color: '#00e0b8', name_bg: 'Храна', name_en: 'Groceries', keywords: 'lidl,billa,kaufland,магазин,супермаркет,grocer,market,fantastico,хляб,мляко' },
+    { key: 'eatout', kind: 'expense', icon: 'utensils', color: '#ff8a3d', name_bg: 'Заведения', name_en: 'Eating out', keywords: 'кафе,кафене,кафета,пица,бургер,ресторант,restaurant,coffee,cafe,pizza,burger,bar,бира,доставка,glovo,takeaway' },
+    { key: 'transport', kind: 'expense', icon: 'bus', color: '#4ea1ff', name_bg: 'Транспорт', name_en: 'Transport', keywords: 'бензин,гориво,автобус,метро,такси,uber,bolt,fuel,gas,shell,bus,taxi,паркинг,parking,билет' },
+    { key: 'housing', kind: 'expense', icon: 'home', color: '#7c5cff', name_bg: 'Жилище и сметки', name_en: 'Housing & bills', keywords: 'наем,ток,вода,парно,интернет,rent,electric,water,internet,bills,сметка,сметки' },
+    { key: 'fun', kind: 'expense', icon: 'play', color: '#ff5c8a', name_bg: 'Забавления', name_en: 'Entertainment', keywords: 'кино,игра,netflix,spotify,cinema,movie,game,steam,концерт,concert,playstation,hbo' },
+    { key: 'health', kind: 'expense', icon: 'heart', color: '#ff6b6b', name_bg: 'Здраве', name_en: 'Health', keywords: 'аптека,лекар,зъболекар,pharmacy,doctor,dentist,витамини,фитнес,gym' },
+    { key: 'shopping', kind: 'expense', icon: 'bag', color: '#e06bff', name_bg: 'Пазаруване', name_en: 'Shopping', keywords: 'дрехи,обувки,amazon,zara,clothes,shoes,shopping,техника,слушалки,electronics' },
+    { key: 'education', kind: 'expense', icon: 'book', color: '#ffc857', name_bg: 'Образование', name_en: 'Education', keywords: 'книга,курс,учебник,book,course,udemy,school,университет,такса' },
+    { key: 'other', kind: 'expense', icon: 'dots', color: '#8e97c4', name_bg: 'Други', name_en: 'Other', keywords: 'друго,other' },
+    { key: 'salary', kind: 'income', icon: 'briefcase', color: '#00e0b8', name_bg: 'Заплата', name_en: 'Salary', keywords: 'заплата,работа,salary,wage,payroll' },
+    { key: 'freelance', kind: 'income', icon: 'laptop', color: '#6be3ff', name_bg: 'Фрийланс', name_en: 'Freelance', keywords: 'фрийланс,проект,freelance,project,клиент,client' },
+    { key: 'gift', kind: 'income', icon: 'gift', color: '#ffc857', name_bg: 'Подаръци', name_en: 'Gifts', keywords: 'подарък,gift,бонус,bonus,джоб' },
   ];
 
   function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -58,9 +58,9 @@ const Store = (() => {
     const dl = k => Algo.iso(new Date(now.getFullYear(), now.getMonth() + k, 15));
     const bg = lang === 'bg';
     const goals = [
-      { id: uuid(), name: bg ? 'Почивка в Гърция' : 'Greece holiday', icon: '🏖️', target_amount: 1200, saved_amount: 640, deadline: dl(4), priority: 2 },
-      { id: uuid(), name: bg ? 'Нов лаптоп' : 'New laptop', icon: '💻', target_amount: 1500, saved_amount: 420, deadline: dl(9), priority: 3 },
-      { id: uuid(), name: bg ? 'Авариен фонд' : 'Emergency fund', icon: '🛟', target_amount: 3000, saved_amount: 900, deadline: dl(16), priority: 1 },
+      { id: uuid(), name: bg ? 'Почивка в Гърция' : 'Greece holiday', icon: 'plane', target_amount: 1200, saved_amount: 640, deadline: dl(4), priority: 2 },
+      { id: uuid(), name: bg ? 'Нов лаптоп' : 'New laptop', icon: 'laptop', target_amount: 1500, saved_amount: 420, deadline: dl(9), priority: 3 },
+      { id: uuid(), name: bg ? 'Авариен фонд' : 'Emergency fund', icon: 'shield', target_amount: 3000, saved_amount: 900, deadline: dl(16), priority: 1 },
     ];
     const contribs = [];
     goals.forEach(g => { const parts = [0.45, 0.35, 0.2]; parts.forEach((p, i) => contribs.push({ id: uuid(), goal_id: g.id, amount: Math.round(g.saved_amount * p), contributed_at: Algo.iso(new Date(now.getFullYear(), now.getMonth() - i - 1, 20)) })); });

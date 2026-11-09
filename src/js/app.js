@@ -4,7 +4,7 @@
   const esc = UI.esc;
   const D = () => Store.data;
   const S = { route: 'dashboard', month: Algo.ym(new Date()), f: { q: '', type: 'all', cat: 'all' }, disposers: [], flip: false };
-  const NAV = [['dashboard', '🏠'], ['transactions', '💳'], ['budgets', '🎯'], ['goals', '🏆'], ['analytics', '📊'], ['settings', '⚙️']];
+  const NAV = [['dashboard', 'home'], ['transactions', 'list'], ['budgets', 'target'], ['goals', 'flag'], ['analytics', 'chart'], ['settings', 'sliders']];
   const locale = () => I18N.lang === 'bg' ? 'bg-BG' : 'en-IE';
   const fmt = {
     money: v => new Intl.NumberFormat(locale(), { style: 'currency', currency: 'EUR', maximumFractionDigits: Math.abs(v) >= 10000 ? 0 : 2 }).format(v || 0),
@@ -30,7 +30,7 @@
     document.documentElement.lang = I18N.lang; document.title = 'MoneyWise — ' + t('tagline');
     const app = document.getElementById('app');
     if (Store.mode === 'cloud' && !Store.user) return renderAuth(app);
-    const navLinks = cls => NAV.map(([r, ic]) => `<a href="#/${r}" class="${S.route === r ? 'on' : ''}"><span class="ic">${ic}</span><span>${t('nav_' + r)}</span></a>`).join('');
+    const navLinks = cls => NAV.map(([r, ic]) => `<a href="#/${r}" class="${S.route === r ? 'on' : ''}"><span class="ic">${I(ic)}</span><span>${t('nav_' + r)}</span></a>`).join('');
     app.innerHTML = `
       <aside class="side">
         <div class="logo"><div class="coin3d"><b>€</b></div><div>MoneyWise<small>${t('tagline')}</small></div></div>
@@ -38,16 +38,16 @@
         <div class="spacer"></div>
         <div class="tools">
           <button class="pill ${I18N.lang === 'bg' ? 'on' : ''}" data-lang="bg">BG</button><button class="pill ${I18N.lang === 'en' ? 'on' : ''}" data-lang="en">EN</button>
-          <button class="pill" id="theme" title="${t('theme')}">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button>
+          <button class="pill" id="theme" title="${t('theme')}">${document.documentElement.dataset.theme === 'dark' ? I('sun') : I('moon')}</button>
         </div>
-        <div class="tools"><span class="mode ${Store.mode}">${Store.mode === 'cloud' ? '☁️ Supabase' : '💾 ' + t('demo_mode')}</span></div>
+        <div class="tools"><span class="mode ${Store.mode}">${Store.mode === 'cloud' ? I('cloud') + ' Supabase' : I('db') + ' ' + t('demo_mode')}</span></div>
       </aside>
       <div class="content">
         <header class="top">
           <h1>${t('nav_' + S.route)}</h1>
-          <div class="mobtools"><button class="pill ${I18N.lang === 'bg' ? 'on' : ''}" data-lang="bg">BG</button><button class="pill ${I18N.lang === 'en' ? 'on' : ''}" data-lang="en">EN</button><button class="pill" id="theme2">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button></div>
+          <div class="mobtools"><button class="pill ${I18N.lang === 'bg' ? 'on' : ''}" data-lang="bg">BG</button><button class="pill ${I18N.lang === 'en' ? 'on' : ''}" data-lang="en">EN</button><button class="pill" id="theme2">${document.documentElement.dataset.theme === 'dark' ? I('sun') : I('moon')}</button></div>
           ${['dashboard', 'transactions', 'budgets'].includes(S.route) ? `<div class="monthsw"><button id="pm" aria-label="prev">‹</button><span>${fmt.month(S.month)}</span><button id="nm" aria-label="next">›</button></div>` : ''}
-          <button class="btn primary" id="addtx">＋ ${t('add_tx')}</button>
+          <button class="btn primary" id="addtx">${I('plus')} ${t('add_tx')}</button>
         </header>
         <main id="view"></main>
       </div>
@@ -97,19 +97,19 @@
       // прозрения
       const ins = [];
       if (isCurrent()) {
-        ins.push(`<div class="ins ${fc.projectedNet >= 0 ? 'good' : 'bad'}"><span class="e">🔮</span><div>${t('ins_forecast', { exp: fmt.money(fc.projectedExpense), net: fmt.sign(fc.projectedNet) })}</div></div>`);
+        ins.push(`<div class="ins ${fc.projectedNet >= 0 ? 'good' : 'bad'}"><span class="e">${I('trend')}</span><div>${t('ins_forecast', { exp: fmt.money(fc.projectedExpense), net: fmt.sign(fc.projectedNet) })}</div></div>`);
         const bud = D().budgets, spentB = Algo.sum(bud.map(b => cur.byCat[b.category_id] || 0)), limB = Algo.sum(bud.map(b => +b.limit_amount));
-        if (bud.length) { const left = Math.max(0, limB - spentB) / (fc.remainingDays + 1); ins.push(`<div class="ins"><span class="e">💡</span><div>${t('ins_daily', { v: fmt.money(left) })}</div></div>`); }
+        if (bud.length) { const left = Math.max(0, limB - spentB) / (fc.remainingDays + 1); ins.push(`<div class="ins"><span class="e">${I('info')}</span><div>${t('ins_daily', { v: fmt.money(left) })}</div></div>`); }
       }
       Algo.budgetAlerts(cur.byCat, D().budgets, today, m).filter(r => r.status !== 'ok').sort((x, y) => y.pct - x.pct).slice(0, 3).forEach(r => {
         const c = catName(cat(r.budget.category_id));
-        if (r.status === 'exceeded') ins.push(`<div class="ins bad"><span class="e">🚨</span><div>${t('ins_over', { c, v: fmt.money(r.spent - r.limit) })}</div></div>`);
-        else if (r.status === 'risk') ins.push(`<div class="ins warn"><span class="e">📉</span><div>${t('ins_risk', { c, d: r.exhaustDay || '—' })}</div></div>`);
-        else ins.push(`<div class="ins warn"><span class="e">⚠️</span><div>${t('ins_near', { c, p: Math.round(r.pct * 100) })}</div></div>`);
+        if (r.status === 'exceeded') ins.push(`<div class="ins bad"><span class="e">${I('alert')}</span><div>${t('ins_over', { c, v: fmt.money(r.spent - r.limit) })}</div></div>`);
+        else if (r.status === 'risk') ins.push(`<div class="ins warn"><span class="e">${I('trenddown')}</span><div>${t('ins_risk', { c, d: r.exhaustDay || '—' })}</div></div>`);
+        else ins.push(`<div class="ins warn"><span class="e">${I('alert')}</span><div>${t('ins_near', { c, p: Math.round(r.pct * 100) })}</div></div>`);
       });
-      Algo.anomalies(tx, cats, today).slice(0, 2).forEach(a => ins.push(`<div class="ins warn"><span class="e">🕵️</span><div>${t('ins_anom', { n: esc(txTitle(a.tx)), v: fmt.money(a.tx.amount), m: fmt.money(a.median) })}</div></div>`));
-      if (cur.income > 0 && rate >= 20) ins.push(`<div class="ins good"><span class="e">🌟</span><div>${t('ins_save', { p: Math.round(rate) })}</div></div>`);
-      if (!ins.length) ins.push(`<div class="ins"><span class="e">✨</span><div>${t('ins_none')}</div></div>`);
+      Algo.anomalies(tx, cats, today).slice(0, 2).forEach(a => ins.push(`<div class="ins warn"><span class="e">${I('eye')}</span><div>${t('ins_anom', { n: esc(txTitle(a.tx)), v: fmt.money(a.tx.amount), m: fmt.money(a.median) })}</div></div>`));
+      if (cur.income > 0 && rate >= 20) ins.push(`<div class="ins good"><span class="e">${I('check')}</span><div>${t('ins_save', { p: Math.round(rate) })}</div></div>`);
+      if (!ins.length) ins.push(`<div class="ins"><span class="e">${I('info')}</span><div>${t('ins_none')}</div></div>`);
       const recent = sortTx(tx).slice(0, 6);
       view().innerHTML = `
       <section class="hero">
@@ -121,28 +121,28 @@
             <div class="face back"><div class="lbl">${fmt.month(m)}</div>
               <div class="stat"><div>${t('income')}<b>${fmt.money(cur.income)}</b></div><div>${t('expenses')}<b>${fmt.money(cur.expense)}</b></div></div>
               <div class="stat"><div>${t('net')}<b>${fmt.sign(cur.net)}</b></div><div>${t('savings_rate')}<b>${Math.round(rate)}%</b></div></div>
-              <div class="row"><span>${t('flip_back')}</span><span>↺</span></div></div></div></div>
-          <form class="quick" id="quick"><span>⚡</span><input id="qin" autocomplete="off" placeholder="${t('quick_ph')}"><span class="hint">${t('quick_hint')}</span><button class="btn primary sm">${t('add')}</button></form>
+              <div class="row"><span>${t('flip_back')}</span><span>${I('refresh')}</span></div></div></div></div>
+          <form class="quick" id="quick"><span>${I('bolt')}</span><input id="qin" autocomplete="off" placeholder="${t('quick_ph')}"><span class="hint">${t('quick_hint')}</span><button class="btn primary sm">${t('add')}</button></form>
         </div>
-        <div class="canvas-wrap"><canvas id="hero3d"></canvas><div class="cap">🖱 ${t('move_mouse')}</div></div>
+        <div class="canvas-wrap"><canvas id="hero3d"></canvas><div class="cap">${t('move_mouse')}</div></div>
       </section>
       <section class="grid g4 mt perspective">
-        <div class="card kpi inc tilt"><span class="glyph">📥</span><span class="lbl">${t('income')}</span><span class="val" data-count="${cur.income}">${fmt.money(cur.income)}</span>${delta(cur.income, prev.income)}</div>
-        <div class="card kpi exp tilt"><span class="glyph">📤</span><span class="lbl">${t('expenses')}</span><span class="val" data-count="${cur.expense}">${fmt.money(cur.expense)}</span>${delta(cur.expense, prev.expense, false)}</div>
-        <div class="card kpi tilt"><span class="glyph">⚖️</span><span class="lbl">${t('net')}</span><span class="val ${cur.net >= 0 ? 'up' : 'down'}">${fmt.sign(cur.net)}</span>${Charts.spark(sp, { color: cur.net >= 0 ? '#00e0b8' : '#ff5c8a' })}</div>
-        <div class="card kpi tilt"><span class="glyph">🐷</span><span class="lbl">${t('savings_rate')}</span><span class="val" data-count="${Math.max(0, rate)}" data-fmt="pct">${Math.round(rate)}%</span><span class="delta" style="color:var(--muted)">${t('target20')}</span></div>
+        <div class="card kpi inc tilt"><span class="glyph">${I('arrowdown')}</span><span class="lbl">${t('income')}</span><span class="val" data-count="${cur.income}">${fmt.money(cur.income)}</span>${delta(cur.income, prev.income)}</div>
+        <div class="card kpi exp tilt"><span class="glyph">${I('arrowup')}</span><span class="lbl">${t('expenses')}</span><span class="val" data-count="${cur.expense}">${fmt.money(cur.expense)}</span>${delta(cur.expense, prev.expense, false)}</div>
+        <div class="card kpi tilt"><span class="glyph">${I('equal')}</span><span class="lbl">${t('net')}</span><span class="val ${cur.net >= 0 ? 'up' : 'down'}">${fmt.sign(cur.net)}</span>${Charts.spark(sp, { color: cur.net >= 0 ? '#00e0b8' : '#ff5c8a' })}</div>
+        <div class="card kpi tilt"><span class="glyph">${I('percent')}</span><span class="lbl">${t('savings_rate')}</span><span class="val" data-count="${Math.max(0, rate)}" data-fmt="pct">${Math.round(rate)}%</span><span class="delta" style="color:var(--muted)">${t('target20')}</span></div>
       </section>
       <section class="grid g21 mt">
-        <div class="card"><h3>📈 ${t('cashflow')}<small>${t('last6')}</small></h3>${Charts.area(months.map(fmt.mshort), [{ name: t('income'), color: '#00e0b8', values: ms.map(x => x.income), fmt: fmt.money }, { name: t('expenses'), color: '#ff5c8a', values: ms.map(x => x.expense), fmt: fmt.money }])}</div>
-        <div class="card"><h3>🧠 ${t('health')}<small>${t('algo')} #2</small></h3><div style="text-align:center">${Charts.gauge(h.score, hcol)}<div style="font-family:var(--head);font-weight:700;color:${hcol};margin-top:-4px">${t('grade_' + h.grade)}</div></div>
+        <div class="card"><h3>${I('chart')} ${t('cashflow')}<small>${t('last6')}</small></h3>${Charts.area(months.map(fmt.mshort), [{ name: t('income'), color: '#00e0b8', values: ms.map(x => x.income), fmt: fmt.money }, { name: t('expenses'), color: '#ff5c8a', values: ms.map(x => x.expense), fmt: fmt.money }])}</div>
+        <div class="card"><h3>${I('pulse')} ${t('health')}<small>${t('algo')} #2</small></h3><div style="text-align:center">${Charts.gauge(h.score, hcol)}<div style="font-family:var(--head);font-weight:700;color:${hcol};margin-top:-4px">${t('grade_' + h.grade)}</div></div>
           <div class="legend" style="margin-top:14px;font-size:12px">${[['savings', 'h_savings'], ['budget', 'h_budget'], ['stability', 'h_stab'], ['goals', 'h_goals']].map(([k, l]) => `<div><i style="background:${hcol}"></i>${t(l)}<em>${Math.round(h.parts[k])}/100</em></div>`).join('')}</div></div>
       </section>
       <section class="grid g12 mt">
-        <div class="card"><h3>🍩 ${t('by_cat')}<small>${fmt.month(m)}</small></h3>
-          ${slices.length ? `<div class="donut-wrap">${Charts.donut(slices, { top: fmt.money(cur.expense), sub: t('expenses') })}<div class="legend">${slices.slice(0, 7).map(s => `<div><i style="background:${s.color}"></i>${esc(s.label)}<em>${Math.round(s.value / cur.expense * 100)}%</em></div>`).join('')}</div></div>` : `<div class="empty"><div class="big">🫙</div>${t('no_data')}</div>`}</div>
+        <div class="card"><h3>${I('pie')} ${t('by_cat')}<small>${fmt.month(m)}</small></h3>
+          ${slices.length ? `<div class="donut-wrap">${Charts.donut(slices, { top: fmt.money(cur.expense), sub: t('expenses') })}<div class="legend">${slices.slice(0, 7).map(s => `<div><i style="background:${s.color}"></i>${esc(s.label)}<em>${Math.round(s.value / cur.expense * 100)}%</em></div>`).join('')}</div></div>` : `<div class="empty"><div class="big">${I('inbox')}</div>${t('no_data')}</div>`}</div>
         <div class="grid">
-          <div class="card"><h3>💬 ${t('insights')}<small>${t('algo')} #1·#4</small></h3>${ins.join('')}</div>
-          <div class="card"><h3>🕒 ${t('recent')}<small><a href="#/transactions" style="color:var(--a2);text-decoration:none">${t('see_all')} →</a></small></h3>${recent.length ? recent.map(txRow).join('') : `<div class="empty">${t('no_data')}</div>`}</div>
+          <div class="card"><h3>${I('info')} ${t('insights')}<small>${t('algo')} #1·#4</small></h3>${ins.join('')}</div>
+          <div class="card"><h3>${I('clock')} ${t('recent')}<small><a href="#/transactions" style="color:var(--a2);text-decoration:none">${t('see_all')} →</a></small></h3>${recent.length ? recent.map(x => txRow(x)).join('') : `<div class="empty">${t('no_data')}</div>`}</div>
         </div>
       </section>`;
       bindTx();
@@ -167,13 +167,13 @@
       list.forEach(x => { if (x.tx_date !== lastDay) { lastDay = x.tx_date; const ds = list.filter(y => y.tx_date === lastDay).reduce((s, y) => s + (y.type === 'income' ? 1 : -1) * +y.amount, 0); html += `<div class="day"><span>${fmt.day(lastDay)}</span><span>${fmt.sign(ds)}</span></div>`; } html += txRow(x, anomIds.has(x.id), true); });
       view().innerHTML = `
       <div class="toolbar">
-        <input class="input" id="q" placeholder="🔍 ${t('search')}" value="${esc(S.f.q)}">
+        <input class="input" id="q" placeholder="${I('search')} ${t('search')}" value="${esc(S.f.q)}">
         <select class="input" id="ft" style="max-width:150px"><option value="all">${t('all_types')}</option><option value="expense" ${S.f.type === 'expense' ? 'selected' : ''}>${t('expense')}</option><option value="income" ${S.f.type === 'income' ? 'selected' : ''}>${t('income_s')}</option></select>
-        <select class="input" id="fc" style="max-width:200px"><option value="all">${t('all_cats')}</option>${D().categories.map(c => `<option value="${c.id}" ${S.f.cat === c.id ? 'selected' : ''}>${c.icon} ${esc(catName(c))}</option>`).join('')}</select>
-        <button class="btn sm" id="csv">⬇ CSV</button>
+        <select class="input" id="fc" style="max-width:200px"><option value="all">${t('all_cats')}</option>${D().categories.map(c => `<option value="${c.id}" ${S.f.cat === c.id ? 'selected' : ''}>${esc(catName(c))}</option>`).join('')}</select>
+        <button class="btn sm" id="csv">${I('download')} CSV</button>
       </div>
       <div class="grid g3" style="margin-bottom:6px"><div class="card kpi inc"><span class="lbl">${t('income')}</span><span class="val">${fmt.money(inc)}</span></div><div class="card kpi exp"><span class="lbl">${t('expenses')}</span><span class="val">${fmt.money(exp)}</span></div><div class="card kpi"><span class="lbl">${t('count')}</span><span class="val">${list.length}<small style="font-size:13px;color:var(--muted)"> / ${all.length}</small></span></div></div>
-      ${html || `<div class="empty"><div class="big">🧾</div><p>${t('no_tx')}</p><br><button class="btn primary" id="e1">＋ ${t('add_tx')}</button></div>`}`;
+      ${html || `<div class="empty"><div class="big">${I('receipt')}</div><p>${t('no_tx')}</p><br><button class="btn primary" id="e1">${I('plus')} ${t('add_tx')}</button></div>`}`;
       document.getElementById('q').oninput = e => { S.f.q = e.target.value; const pos = e.target.selectionStart; VIEWS.transactions(); const q = document.getElementById('q'); q.focus(); q.setSelectionRange(pos, pos); };
       document.getElementById('ft').onchange = e => { S.f.type = e.target.value; VIEWS.transactions(); };
       document.getElementById('fc').onchange = e => { S.f.cat = e.target.value; VIEWS.transactions(); };
@@ -188,20 +188,20 @@
       const free = D().categories.filter(c => c.kind === 'expense' && !bud.find(b => b.category_id === c.id));
       const day = isCurrent() ? new Date().getDate() / Algo.daysIn(S.month) : 1;
       view().innerHTML = `
-      <div class="card tilt" style="margin-bottom:18px"><h3>🎯 ${t('total_budget')}</h3><div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px">
+      <div class="card tilt" style="margin-bottom:18px"><h3>${I('target')} ${t('total_budget')}</h3><div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px">
         <div class="meta"><span>${fmt.money(totalSp)}</span><span>${fmt.money(totalLim)}</span></div><div class="prog ${totalSp > totalLim ? 'bad' : totalSp > totalLim * .85 ? 'warn' : ''}" style="margin:8px 0"><i style="width:${Math.min(100, totalLim ? totalSp / totalLim * 100 : 0)}%"></i></div>
         <div class="explain">${totalLim - totalSp >= 0 ? t('left_of', { v: fmt.money(totalLim - totalSp) }) : t('over_by', { v: fmt.money(totalSp - totalLim) })}</div></div>
         ${Charts.ring(totalLim ? totalSp / totalLim : 0, { size: 110, color: totalSp > totalLim ? '#ff5c8a' : '#00e0b8' })}</div></div>
       <div class="grid g3 perspective">${bud.map(b => {
         const c = cat(b.category_id), sp_ = cur.byCat[b.category_id] || 0, lim = +b.limit_amount, p = sp_ / lim;
         const cls = p > 1 ? 'bad' : p > .85 ? 'warn' : '';
-        return `<div class="card bcard tilt"><div class="head"><div class="ico" style="background:${c ? c.color : '#888'}33">${c ? c.icon : '❔'}</div><div style="flex:1"><b>${esc(catName(c))}</b><small>${t('limit')}: ${fmt.money(lim)}</small></div>
-          <button class="icon-btn" data-editb="${b.id}">✏️</button><button class="icon-btn" data-delb="${b.id}">🗑</button></div>
+        return `<div class="card bcard tilt"><div class="head"><div class="ico" style="background:${c ? c.color : '#888'}33">${CI(c)}</div><div style="flex:1"><b>${esc(catName(c))}</b><small>${t('limit')}: ${fmt.money(lim)}</small></div>
+          <button class="icon-btn" data-editb="${b.id}">${I('edit')}</button><button class="icon-btn" data-delb="${b.id}">${I('trash')}</button></div>
           <div class="prog ${cls}"><i style="width:${Math.min(100, p * 100)}%"></i></div>
-          <div class="meta"><span>${fmt.money(sp_)} (${Math.round(p * 100)}%)</span><span>${p > 1 ? '🚨 ' + t('over_by', { v: fmt.money(sp_ - lim) }) : t('left_of', { v: fmt.money(lim - sp_) })}</span></div>
-          ${isCurrent() && day > .1 && sp_ / day > lim && p <= 1 ? `<div class="sug">📉 ${t('pace_warn', { v: fmt.money(sp_ / day) })}</div>` : ''}</div>`;
+          <div class="meta"><span>${fmt.money(sp_)} (${Math.round(p * 100)}%)</span><span>${p > 1 ? I('alert') + ' ' + t('over_by', { v: fmt.money(sp_ - lim) }) : t('left_of', { v: fmt.money(lim - sp_) })}</span></div>
+          ${isCurrent() && day > .1 && sp_ / day > lim && p <= 1 ? `<div class="sug">${I('trenddown')} ${t('pace_warn', { v: fmt.money(sp_ / day) })}</div>` : ''}</div>`;
       }).join('')}
-      <button class="card tilt" id="addb" style="display:grid;place-items:center;min-height:150px;border-style:dashed;color:var(--muted);font-weight:800">＋ ${t('add_budget')}</button></div>
+      <button class="card tilt" id="addb" style="display:grid;place-items:center;min-height:150px;border-style:dashed;color:var(--muted);font-weight:800">${I('plus')} ${t('add_budget')}</button></div>
       ${free.length ? '' : ''}`;
       document.getElementById('addb').onclick = () => budgetModal();
       view().querySelectorAll('[data-editb]').forEach(b => b.onclick = () => budgetModal(D().budgets.find(x => x.id === b.dataset.editb)));
@@ -214,20 +214,20 @@
       const surplus = Math.max(0, net / 3);
       const alloc = Algo.allocate(D().goals, surplus, today), al = Object.fromEntries(alloc.map(a => [a.goal.id, a]));
       view().innerHTML = `
-      <div class="card tilt" style="margin-bottom:18px"><h3>🧮 ${t('smart_alloc')}<small>${t('algo')} #3</small></h3>
+      <div class="card tilt" style="margin-bottom:18px"><h3>${I('sliders')} ${t('smart_alloc')}<small>${t('algo')} #3</small></h3>
         <div class="explain">${t('alloc_intro', { v: fmt.money(surplus) })}</div>
         <details class="how"><summary>${t('how_it_works')}</summary><div class="explain" style="margin-top:8px">${t('alloc_how')}</div></details></div>
       <div class="grid g2 perspective">${D().goals.map(g => {
         const p = +g.saved_amount / +g.target_amount, a = al[g.id], done = p >= 1;
         const eta = a && isFinite(a.eta) ? (() => { const d = new Date(); d.setMonth(d.getMonth() + Math.ceil(a.eta)); return fmt.date(Algo.iso(d)); })() : null;
-        return `<div class="card tilt"><div class="goal"><div class="ringbox">${Charts.ring(p, { size: 118, stroke: 12, color: done ? '#ffc857' : '#00e0b8' })}<div style="position:absolute;inset:0;display:grid;place-items:center;font-size:46px;opacity:.14">${g.icon}</div></div>
-          <div class="info"><h4>${g.icon} ${esc(g.name)}</h4>
+        return `<div class="card tilt"><div class="goal"><div class="ringbox">${Charts.ring(p, { size: 118, stroke: 12, color: done ? '#ffc857' : '#00e0b8' })}<div style="position:absolute;inset:0;display:grid;place-items:center;opacity:.55;color:var(--muted)">${GI(g)}</div></div>
+          <div class="info"><h4>${esc(g.name)}</h4>
           <div class="meta"><span>${fmt.money(g.saved_amount)} / ${fmt.money(g.target_amount)}</span><span>${t('deadline')}: ${fmt.date(g.deadline)}</span></div>
           <div class="prog"><i style="width:${Math.min(100, p * 100)}%"></i></div>
-          ${done ? `<div class="sug">🎉 ${t('goal_done')}</div>` : a ? `<div class="sug">${a.onTrack ? '✅' : '⏳'} ${t('suggest', { v: fmt.money(a.give), n: fmt.money(a.need) })}${eta ? ' · ' + t('eta', { d: eta }) : ''}</div>` : ''}
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${done ? '' : `<button class="btn mint sm" data-contrib="${g.id}">＋ ${t('contribute')}</button>`}<button class="btn sm" data-editg="${g.id}">✏️</button><button class="btn sm danger" data-delg="${g.id}">🗑</button></div></div></div></div>`;
+          ${done ? `<div class="sug">${I('check')} ${t('goal_done')}</div>` : a ? `<div class="sug">${a.onTrack ? I('check') : I('clock')} ${t('suggest', { v: fmt.money(a.give), n: fmt.money(a.need) })}${eta ? ' · ' + t('eta', { d: eta }) : ''}</div>` : ''}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${done ? '' : `<button class="btn mint sm" data-contrib="${g.id}">${I('plus')} ${t('contribute')}</button>`}<button class="btn sm" data-editg="${g.id}">${I('edit')}</button><button class="btn sm danger" data-delg="${g.id}">${I('trash')}</button></div></div></div></div>`;
       }).join('')}
-      <button class="card tilt" id="addg" style="display:grid;place-items:center;min-height:190px;border-style:dashed;color:var(--muted);font-weight:800">＋ ${t('add_goal')}</button></div>`;
+      <button class="card tilt" id="addg" style="display:grid;place-items:center;min-height:190px;border-style:dashed;color:var(--muted);font-weight:800">${I('plus')} ${t('add_goal')}</button></div>`;
       document.getElementById('addg').onclick = () => goalModal();
       view().querySelectorAll('[data-editg]').forEach(b => b.onclick = () => goalModal(D().goals.find(x => x.id === b.dataset.editg)));
       view().querySelectorAll('[data-contrib]').forEach(b => b.onclick = () => contribModal(D().goals.find(x => x.id === b.dataset.contrib)));
@@ -259,20 +259,20 @@
       const topM = Object.entries(merch).sort((a, b) => b[1] - a[1]).slice(0, 6);
       const fc = Algo.forecast(tx, cats, new Date());
       view().innerHTML = `
-      <div class="card"><h3>🧊 ${t('chart3d')}<small>${t('drag_rotate')}</small></h3>
+      <div class="card"><h3>${I('cube')} ${t('chart3d')}<small>${t('drag_rotate')}</small></h3>
         <div class="canvas-wrap" style="min-height:380px;background:none;border:0"><canvas id="bars3d" style="cursor:grab"></canvas><div class="tip" id="tip3d"></div></div>
-        <div class="legend" style="flex-direction:row;flex-wrap:wrap;gap:16px;margin-top:10px">${top.map(c => `<div><i style="background:${c.color}"></i>${c.icon} ${esc(catName(c))}</div>`).join('')}</div></div>
+        <div class="legend" style="flex-direction:row;flex-wrap:wrap;gap:16px;margin-top:10px">${top.map(c => `<div><i style="background:${c.color}"></i>${esc(catName(c))}</div>`).join('')}</div></div>
       <div class="grid g2 mt">
-        <div class="card"><h3>💎 ${t('net_worth')}<small>${t('cumulative')}</small></h3>${allm.length > 1 ? Charts.area(allm.map(fmt.mshort), [{ name: t('net_worth'), color: '#7c5cff', values: worth, fmt: fmt.money }]) : ''}</div>
-        <div class="card"><h3>🔮 ${t('forecast')}<small>${t('algo')} #1</small></h3>
+        <div class="card"><h3>${I('trend')} ${t('net_worth')}<small>${t('cumulative')}</small></h3>${allm.length > 1 ? Charts.area(allm.map(fmt.mshort), [{ name: t('net_worth'), color: '#7c5cff', values: worth, fmt: fmt.money }]) : ''}</div>
+        <div class="card"><h3>${I('trend')} ${t('forecast')}<small>${t('algo')} #1</small></h3>
           <div class="grid g2"><div class="kpi"><span class="lbl">${t('proj_exp')}</span><span class="val exp" style="color:var(--exp)">${fmt.money(fc.projectedExpense)}</span></div><div class="kpi"><span class="lbl">${t('proj_net')}</span><span class="val" style="color:${fc.projectedNet >= 0 ? 'var(--inc)' : 'var(--exp)'}">${fmt.sign(fc.projectedNet)}</span></div>
           <div class="kpi"><span class="lbl">${t('daily_rate')}</span><span class="val">${fmt.money(fc.rate)}</span></div><div class="kpi"><span class="lbl">${t('days_left')}</span><span class="val">${fc.remainingDays}</span></div></div>
           <details class="how"><summary>${t('how_it_works')}</summary><div class="explain" style="margin-top:8px">${t('fc_how')}</div></details></div>
       </div>
       <div class="grid g3 mt">
-        <div class="card"><h3>🗓 ${t('heatmap')}<small>${fmt.month(mm)}</small></h3><div class="heat perspective">${heat}</div></div>
-        <div class="card"><h3>📆 ${t('by_weekday')}</h3><div class="wk">${wsum.map((v, i) => `<div title="${fmt.money(v)}"><i class="${i === wtop ? 'max' : ''}" style="height:${Math.max(3, v / wmax * 100)}%"></i>${wd[i]}</div>`).join('')}</div></div>
-        <div class="card"><h3>🏪 ${t('top_merch')}</h3><table class="t">${topM.map(([n, v]) => `<tr><td>${esc(n)}</td><td>${fmt.money(v)}</td></tr>`).join('') || `<tr><td>${t('no_data')}</td></tr>`}</table></div>
+        <div class="card"><h3>${I('calendar')} ${t('heatmap')}<small>${fmt.month(mm)}</small></h3><div class="heat perspective">${heat}</div></div>
+        <div class="card"><h3>${I('calendar')} ${t('by_weekday')}</h3><div class="wk">${wsum.map((v, i) => `<div title="${fmt.money(v)}"><i class="${i === wtop ? 'max' : ''}" style="height:${Math.max(3, v / wmax * 100)}%"></i>${wd[i]}</div>`).join('')}</div></div>
+        <div class="card"><h3>${I('store')} ${t('top_merch')}</h3><table class="t">${topM.map(([n, v]) => `<tr><td>${esc(n)}</td><td>${fmt.money(v)}</td></tr>`).join('') || `<tr><td>${t('no_data')}</td></tr>`}</table></div>
       </div>`;
       S.disposers.push(Scene3D.bars(document.getElementById('bars3d'), document.getElementById('tip3d'), { months: months.map(fmt.mshort), cats: top.map(c => ({ color: c.color, name: catName(c) })), values: vals, fmt: fmt.money }));
     },
@@ -281,16 +281,16 @@
       const cs = D().categories;
       view().innerHTML = `
       <div class="grid g2">
-        <div class="card"><h3>🌍 ${t('language')}</h3><div style="display:flex;gap:10px"><button class="btn ${I18N.lang === 'bg' ? 'primary' : ''}" data-lang="bg">🇧🇬 Български</button><button class="btn ${I18N.lang === 'en' ? 'primary' : ''}" data-lang="en">🇬🇧 English</button></div>
+        <div class="card"><h3>${I('globe')} ${t('language')}</h3><div style="display:flex;gap:10px"><button class="btn ${I18N.lang === 'bg' ? 'primary' : ''}" data-lang="bg">Български</button><button class="btn ${I18N.lang === 'en' ? 'primary' : ''}" data-lang="en">English</button></div>
           <p class="explain" style="margin-top:12px">${t('lang_note')}</p></div>
-        <div class="card"><h3>🔌 ${t('data_source')}</h3><p><span class="mode ${Store.mode}">${Store.mode === 'cloud' ? '☁️ Supabase' : '💾 ' + t('demo_mode')}</span></p>
+        <div class="card"><h3>${I('db')} ${t('data_source')}</h3><p><span class="mode ${Store.mode}">${Store.mode === 'cloud' ? I('cloud') + ' Supabase' : I('db') + ' ' + t('demo_mode')}</span></p>
           <p class="explain" style="margin-top:12px">${Store.mode === 'cloud' ? t('cloud_note', { e: esc(Store.user.email) }) : t('local_note')}</p>
           ${Store.mode === 'cloud' ? `<br><button class="btn danger sm" id="so">${t('sign_out')}</button>` : ''}</div>
-        <div class="card"><h3>💾 ${t('backup')}</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" id="exj">⬇ JSON</button><label class="btn sm" for="imj">⬆ ${t('import')}</label><input type="file" id="imj" accept=".json" hidden></div></div>
-        <div class="card"><h3>🧪 ${t('demo_data')}</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm mint" id="demo">${t('load_demo')}</button><button class="btn sm danger" id="wipe">${t('wipe')}</button></div></div>
+        <div class="card"><h3>${I('db')} ${t('backup')}</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" id="exj">${I('download')} JSON</button><label class="btn sm" for="imj">${I('upload')} ${t('import')}</label><input type="file" id="imj" accept=".json" hidden></div></div>
+        <div class="card"><h3>${I('db')} ${t('demo_data')}</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm mint" id="demo">${t('load_demo')}</button><button class="btn sm danger" id="wipe">${t('wipe')}</button></div></div>
       </div>
-      <div class="card mt"><h3>🏷 ${t('categories')}<button class="btn sm primary" id="addc" style="margin-left:auto">＋ ${t('add')}</button></h3>
-        <div class="grid g3">${cs.map(c => `<div class="tx" style="margin:0"><div class="ico" style="background:${c.color}33">${c.icon}</div><div class="mid"><b>${esc(catName(c))}</b><small>${c.kind === 'income' ? t('income_s') : t('expense')}</small></div><div class="acts" style="opacity:1"><button class="icon-btn" data-delc="${c.id}">🗑</button></div></div>`).join('')}</div></div>`;
+      <div class="card mt"><h3>${I('tag')} ${t('categories')}<button class="btn sm primary" id="addc" style="margin-left:auto">${I('plus')} ${t('add')}</button></h3>
+        <div class="grid g3">${cs.map(c => `<div class="tx" style="margin:0"><div class="ico" style="background:${c.color}33">${c.icon}</div><div class="mid"><b>${esc(catName(c))}</b><small>${c.kind === 'income' ? t('income_s') : t('expense')}</small></div><div class="acts" style="opacity:1"><button class="icon-btn" data-delc="${c.id}">${I('trash')}</button></div></div>`).join('')}</div></div>`;
       view().querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { I18N.set(b.dataset.lang); render(); });
       const so = document.getElementById('so'); if (so) so.onclick = async () => { await Store.signOut(); render(); };
       document.getElementById('exj').onclick = () => download('moneywise-backup.json', 'application/json', Store.exportJSON());
@@ -305,17 +305,17 @@
   /* ─────────────── общи елементи ─────────────── */
   function txRow(x, anom = false, actions = false) {
     const c = cat(x.category_id), inc = x.type === 'income';
-    return `<div class="tx"><div class="ico" style="background:${c ? c.color : '#888'}2e">${c ? c.icon : '❔'}</div>
+    return `<div class="tx"><div class="ico" style="background:${c ? c.color : '#888'}2e">${CI(c)}</div>
       <div class="mid"><b>${esc(txTitle(x))}${anom ? `<span class="badge">${t('unusual')}</span>` : ''}</b><small>${esc(catName(c))} · ${fmt.date(x.tx_date)}</small></div>
       <div class="sum" style="color:var(--${inc ? 'inc' : 'exp'})">${inc ? '+' : '−'}${fmt.money(+x.amount)}</div>
-      <div class="acts"><button class="icon-btn" data-edit="${x.id}" aria-label="edit">✏️</button><button class="icon-btn" data-del="${x.id}" aria-label="delete">🗑</button></div></div>`;
+      <div class="acts"><button class="icon-btn" data-edit="${x.id}" aria-label="edit">${I('edit')}</button><button class="icon-btn" data-del="${x.id}" aria-label="delete">${I('trash')}</button></div></div>`;
   }
   function bindTx() {
     view().querySelectorAll('[data-edit]').forEach(b => b.onclick = () => txModal(D().transactions.find(x => x.id === b.dataset.edit)));
     view().querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (await UI.confirm(t('confirm_del'), t('delete'), t('cancel'))) save(() => Store.remove('transactions', b.dataset.del), t('deleted')); });
   }
   async function save(fn, okMsg) {
-    try { await fn(); if (okMsg) UI.toast('✓ ' + okMsg); render(); }
+    try { await fn(); if (okMsg) UI.toast(okMsg); render(); }
     catch (e) { console.error(e); UI.toast((e && e.message) || t('error'), 'err'); }
   }
   function download(name, mime, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
@@ -324,14 +324,14 @@
   function txModal(tx) {
     const v = tx || { type: 'expense', amount: '', category_id: '', note: '', tx_date: Algo.iso(new Date()) };
     const m = UI.modal(`<h3>${tx ? t('edit_tx') : t('add_tx')}</h3><form id="f">
-      <div class="seg"><label><input type="radio" name="type" value="expense" ${v.type === 'expense' ? 'checked' : ''}><span>📤 ${t('expense')}</span></label><label><input type="radio" name="type" value="income" ${v.type === 'income' ? 'checked' : ''}><span>📥 ${t('income_s')}</span></label></div>
+      <div class="seg"><label><input type="radio" name="type" value="expense" ${v.type === 'expense' ? 'checked' : ''}><span>${t('expense')}</span></label><label><input type="radio" name="type" value="income" ${v.type === 'income' ? 'checked' : ''}><span>${t('income_s')}</span></label></div>
       <label class="field"><span>${t('amount')} (€)</span><input name="amount" type="number" step="0.01" min="0.01" inputmode="decimal" required value="${v.amount}"></label>
       <label class="field"><span>${t('category')}</span><select name="category_id"></select></label>
       <label class="field"><span>${t('date')}</span><input name="tx_date" type="date" required value="${v.tx_date}"></label>
       <label class="field"><span>${t('note')}</span><input name="note" maxlength="80" value="${esc(v.note)}" placeholder="${t('note_ph')}"></label>
       <div class="actions"><button type="button" class="btn ghost" data-close>${t('cancel')}</button><button class="btn primary">${t('save')}</button></div></form>`);
     const f = m.el.querySelector('#f'), sel = f.category_id;
-    const fill = () => { const type = f.type.value; sel.innerHTML = D().categories.filter(c => c.kind === type).map(c => `<option value="${c.id}" ${c.id === v.category_id ? 'selected' : ''}>${c.icon} ${esc(catName(c))}</option>`).join(''); };
+    const fill = () => { const type = f.type.value; sel.innerHTML = D().categories.filter(c => c.kind === type).map(c => `<option value="${c.id}" ${c.id === v.category_id ? 'selected' : ''}>${esc(catName(c))}</option>`).join(''); };
     fill(); f.querySelectorAll('[name=type]').forEach(r => r.onchange = () => { v.category_id = ''; fill(); });
     f.onsubmit = async e => {
       e.preventDefault(); const amount = parseFloat(f.amount.value);
@@ -344,18 +344,17 @@
     const used = new Set(D().budgets.map(x => x.category_id));
     const opts = D().categories.filter(c => c.kind === 'expense' && (!used.has(c.id) || (b && b.category_id === c.id)));
     if (!opts.length) return UI.toast(t('no_free_cat'), 'err');
-    const m = UI.modal(`<h3>${b ? t('edit_budget') : t('add_budget')}</h3><form id="f"><label class="field"><span>${t('category')}</span><select name="c" ${b ? 'disabled' : ''}>${opts.map(c => `<option value="${c.id}" ${b && b.category_id === c.id ? 'selected' : ''}>${c.icon} ${esc(catName(c))}</option>`).join('')}</select></label>
+    const m = UI.modal(`<h3>${b ? t('edit_budget') : t('add_budget')}</h3><form id="f"><label class="field"><span>${t('category')}</span><select name="c" ${b ? 'disabled' : ''}>${opts.map(c => `<option value="${c.id}" ${b && b.category_id === c.id ? 'selected' : ''}>${esc(catName(c))}</option>`).join('')}</select></label>
       <label class="field"><span>${t('limit')} (€ / ${t('month')})</span><input name="l" type="number" step="1" min="1" required value="${b ? b.limit_amount : ''}"></label>
       <div class="actions"><button type="button" class="btn ghost" data-close>${t('cancel')}</button><button class="btn primary">${t('save')}</button></div></form>`);
     const f = m.el.querySelector('#f');
     f.onsubmit = e => { e.preventDefault(); const l = parseFloat(f.l.value); if (!(l > 0)) return; m.close(); save(() => b ? Store.update('budgets', b.id, { limit_amount: l }) : Store.add('budgets', { category_id: f.c.value, limit_amount: l }), t('saved')); };
   }
   function goalModal(g) {
-    const icons = ['🏖️', '💻', '🚗', '🏠', '🎓', '💍', '🛟', '📱', '🎸', '✈️', '🏋️', '🎁'];
-    const v = g || { name: '', icon: '🏖️', target_amount: '', saved_amount: 0, deadline: Algo.iso(new Date(new Date().getFullYear(), new Date().getMonth() + 6, 15)), priority: 2 };
+        const v = g || { name: '', icon: 'flag', target_amount: '', saved_amount: 0, deadline: Algo.iso(new Date(new Date().getFullYear(), new Date().getMonth() + 6, 15)), priority: 2 };
     const m = UI.modal(`<h3>${g ? t('edit_goal') : t('add_goal')}</h3><form id="f">
       <label class="field"><span>${t('name')}</span><input name="name" required maxlength="40" value="${esc(v.name)}"></label>
-      <label class="field"><span>${t('icon')}</span><select name="icon">${icons.map(i => `<option ${i === v.icon ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
+      <div class="field"><span>${t('icon')}</span><div class="iconpick">${GOAL_PICK.map(i => `<label><input type="radio" name="icon" value="${i}" ${(ICONS[v.icon] ? v.icon : 'flag') === i ? 'checked' : ''}><span>${I(i)}</span></label>`).join('')}</div></div>
       <div class="grid g2" style="gap:12px"><label class="field"><span>${t('target')} (€)</span><input name="target" type="number" min="1" step="1" required value="${v.target_amount}"></label><label class="field"><span>${t('saved')} (€)</span><input name="saved" type="number" min="0" step="0.01" value="${v.saved_amount}"></label></div>
       <div class="grid g2" style="gap:12px"><label class="field"><span>${t('deadline')}</span><input name="deadline" type="date" required value="${v.deadline}"></label><label class="field"><span>${t('priority')}</span><select name="priority"><option value="1" ${v.priority == 1 ? 'selected' : ''}>${t('p_low')}</option><option value="2" ${v.priority == 2 ? 'selected' : ''}>${t('p_mid')}</option><option value="3" ${v.priority == 3 ? 'selected' : ''}>${t('p_high')}</option></select></label></div>
       <div class="actions"><button type="button" class="btn ghost" data-close>${t('cancel')}</button><button class="btn primary">${t('save')}</button></div></form>`);
@@ -364,7 +363,7 @@
   }
   function contribModal(g) {
     const rem = Math.max(0, g.target_amount - g.saved_amount);
-    const m = UI.modal(`<h3>${g.icon} ${esc(g.name)}</h3><form id="f"><label class="field"><span>${t('amount')} (€)</span><input name="a" type="number" step="0.01" min="0.01" required value="${Math.min(rem, 50)}"></label>
+    const m = UI.modal(`<h3>${esc(g.name)}</h3><form id="f"><label class="field"><span>${t('amount')} (€)</span><input name="a" type="number" step="0.01" min="0.01" required value="${Math.min(rem, 50)}"></label>
       <p class="explain" style="margin-bottom:14px">${t('remaining')}: ${fmt.money(rem)}</p><div class="actions"><button type="button" class="btn ghost" data-close>${t('cancel')}</button><button class="btn mint">${t('contribute')}</button></div></form>`);
     const f = m.el.querySelector('#f');
     f.onsubmit = e => {
@@ -376,11 +375,11 @@
   function catModal() {
     const cols = ['#00e0b8', '#7c5cff', '#ff5c8a', '#ffc857', '#4ea1ff', '#ff8a3d', '#e06bff', '#6be3ff'];
     const m = UI.modal(`<h3>${t('add_cat')}</h3><form id="f"><div class="seg"><label><input type="radio" name="k" value="expense" checked><span>${t('expense')}</span></label><label><input type="radio" name="k" value="income"><span>${t('income_s')}</span></label></div>
-      <label class="field"><span>${t('name')}</span><input name="n" required maxlength="30"></label><label class="field"><span>${t('icon')} (emoji)</span><input name="i" maxlength="4" value="🏷️"></label>
+      <label class="field"><span>${t('name')}</span><input name="n" required maxlength="30"></label><div class="field"><span>${t('icon')}</span><div class="iconpick">${CAT_PICK.map((i, k) => `<label><input type="radio" name="i" value="${i}" ${k === 0 ? 'checked' : ''}><span>${I(i)}</span></label>`).join('')}</div></div>
       <label class="field"><span>${t('color')}</span><select name="c">${cols.map(c => `<option value="${c}" style="background:${c};color:#000">${c}</option>`).join('')}</select></label>
       <div class="actions"><button type="button" class="btn ghost" data-close>${t('cancel')}</button><button class="btn primary">${t('save')}</button></div></form>`);
     const f = m.el.querySelector('#f');
-    f.onsubmit = e => { e.preventDefault(); const n = f.n.value.trim(); m.close(); save(() => Store.add('categories', { key: 'custom', kind: f.k.value, icon: f.i.value || '🏷️', color: f.c.value, name_bg: n, name_en: n, keywords: n.toLowerCase() }), t('saved')); };
+    f.onsubmit = e => { e.preventDefault(); const n = f.n.value.trim(); m.close(); save(() => Store.add('categories', { key: 'custom', kind: f.k.value, icon: f.i.value || 'tag', color: f.c.value, name_bg: n, name_en: n, keywords: n.toLowerCase() }), t('saved')); };
   }
 
   /* ─────────────── старт ─────────────── */

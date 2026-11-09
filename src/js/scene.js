@@ -10,7 +10,7 @@ const Scene3D = (() => {
     g.fillStyle = bg; g.fillRect(0, 0, 512, 512);
     g.lineWidth = 14; g.strokeStyle = 'rgba(122,75,0,.55)'; g.beginPath(); g.arc(256, 256, 226, 0, Math.PI * 2); g.stroke();
     g.lineWidth = 4; g.setLineDash([6, 10]); g.strokeStyle = 'rgba(122,75,0,.5)'; g.beginPath(); g.arc(256, 256, 198, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
-    g.font = '800 330px Unbounded, Manrope, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '800 330px Manrope, Manrope, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillStyle = 'rgba(255,240,180,.5)'; g.fillText('€', 252, 262);
     g.fillStyle = '#7a4b00'; g.fillText('€', 256, 268);
     const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
