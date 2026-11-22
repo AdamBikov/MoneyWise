@@ -7,6 +7,6 @@
  * 3. Ако полетата са празни, приложението работи в ДЕМО режим (localStorage).
  */
 window.MW_CONFIG = {
-  SUPABASE_URL: "",
+  SUPABASE_URL: "https://opkghyxroeglwrfbbzww.supabase.co",
   SUPABASE_ANON_KEY: ""
 };
