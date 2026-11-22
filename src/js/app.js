@@ -30,11 +30,11 @@
     document.documentElement.lang = I18N.lang; document.title = 'MoneyWise — ' + t('tagline');
     const app = document.getElementById('app');
     if (Store.mode === 'cloud' && !Store.user) return renderAuth(app);
-    const navLinks = cls => NAV.map(([r, ic]) => `<a href="#/${r}" class="${S.route === r ? 'on' : ''}"><span class="ic">${I(ic)}</span><span>${t('nav_' + r)}</span></a>`).join('');
+    const navLinks = cls => NAV.map(([r, ic]) => `<a href="#/${r}" class="${S.route === r ? 'on' : ''}" ${S.route === r ? 'aria-current="page"' : ''}><span class="ic">${I(ic)}</span><span>${t('nav_' + r)}</span></a>`).join('');
     app.innerHTML = `
       <aside class="side">
         <div class="logo"><div class="coin3d"><b>€</b></div><div>MoneyWise<small>${t('tagline')}</small></div></div>
-        <nav class="nav">${navLinks()}</nav>
+        <nav class="nav" aria-label="${t('menu')}">${navLinks()}</nav>
         <div class="spacer"></div>
         <div class="tools">
           <button class="pill ${I18N.lang === 'bg' ? 'on' : ''}" data-lang="bg">BG</button><button class="pill ${I18N.lang === 'en' ? 'on' : ''}" data-lang="en">EN</button>
@@ -51,7 +51,7 @@
         </header>
         <main id="view"></main>
       </div>
-      <nav class="bottom">${navLinks()}</nav>`;
+      <nav class="bottom" aria-label="${t('menu')}">${navLinks()}</nav>`;
     app.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { I18N.set(b.dataset.lang); render(); });
     const th = () => { const d = document.documentElement; d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('mw.theme', d.dataset.theme); } catch (e) {} render(); };
     ['theme', 'theme2'].forEach(i => { const e = document.getElementById(i); if (e) e.onclick = th; });
@@ -167,7 +167,7 @@
       list.forEach(x => { if (x.tx_date !== lastDay) { lastDay = x.tx_date; const ds = list.filter(y => y.tx_date === lastDay).reduce((s, y) => s + (y.type === 'income' ? 1 : -1) * +y.amount, 0); html += `<div class="day"><span>${fmt.day(lastDay)}</span><span>${fmt.sign(ds)}</span></div>`; } html += txRow(x, anomIds.has(x.id), true); });
       view().innerHTML = `
       <div class="toolbar">
-        <input class="input" id="q" placeholder="${I('search')} ${t('search')}" value="${esc(S.f.q)}">
+        <input class="input" id="q" placeholder="${t('search')}" value="${esc(S.f.q)}">
         <select class="input" id="ft" style="max-width:150px"><option value="all">${t('all_types')}</option><option value="expense" ${S.f.type === 'expense' ? 'selected' : ''}>${t('expense')}</option><option value="income" ${S.f.type === 'income' ? 'selected' : ''}>${t('income_s')}</option></select>
         <select class="input" id="fc" style="max-width:200px"><option value="all">${t('all_cats')}</option>${D().categories.map(c => `<option value="${c.id}" ${S.f.cat === c.id ? 'selected' : ''}>${esc(catName(c))}</option>`).join('')}</select>
         <button class="btn sm" id="csv">${I('download')} CSV</button>

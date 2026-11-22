@@ -2,7 +2,7 @@
 const I18N = (() => {
   const dict = {
     bg: {
-      tagline: 'Личен бюджет', theme: 'Тема', demo_mode: 'Демо режим', demo_user: 'Демо потребител',
+      tagline: 'Личен бюджет', menu: 'Главно меню', theme: 'Тема', demo_mode: 'Демо режим', demo_user: 'Демо потребител',
       auth_sub: 'Влез, за да синхронизираш бюджета си в облака.', password: 'Парола', sign_in: 'Вход', sign_up: 'Регистрация',
       confirm_email: 'Провери имейла си, за да потвърдиш регистрацията.',
       nav_dashboard: 'Табло', nav_transactions: 'Транзакции', nav_budgets: 'Бюджети', nav_goals: 'Цели', nav_analytics: 'Анализ', nav_settings: 'Настройки',
@@ -39,7 +39,7 @@ const I18N = (() => {
       no_free_cat: 'Всички категории вече имат бюджет.', month: 'месец', name: 'Име', icon: 'Икона', target: 'Цел', priority: 'Приоритет', p_low: 'Нисък', p_mid: 'Среден', p_high: 'Висок', remaining: 'Остават', add_cat: 'Нова категория', color: 'Цвят',
     },
     en: {
-      tagline: 'Personal budget', theme: 'Theme', demo_mode: 'Demo mode', demo_user: 'Demo user',
+      tagline: 'Personal budget', menu: 'Main menu', theme: 'Theme', demo_mode: 'Demo mode', demo_user: 'Demo user',
       auth_sub: 'Sign in to sync your budget to the cloud.', password: 'Password', sign_in: 'Sign in', sign_up: 'Sign up',
       confirm_email: 'Check your email to confirm your registration.',
       nav_dashboard: 'Dashboard', nav_transactions: 'Transactions', nav_budgets: 'Budgets', nav_goals: 'Goals', nav_analytics: 'Analytics', nav_settings: 'Settings',
@@ -78,7 +78,11 @@ const I18N = (() => {
   };
   const I = {
     lang: 'bg', dict,
-    init() { try { const l = localStorage.getItem('mw.lang'); if (l && dict[l]) this.lang = l; } catch (e) {} },
+    init() {
+      // ?lang=en в адреса има предимство (удобно за учителя и за снимки); иначе — запазеният избор; иначе BG
+      try { const q = new URLSearchParams(location.search).get('lang'); if (q && dict[q]) { this.lang = q; localStorage.setItem('mw.lang', q); return; } } catch (e) {}
+      try { const l = localStorage.getItem('mw.lang'); if (l && dict[l]) this.lang = l; } catch (e) {}
+    },
     set(l) { if (!dict[l]) return; this.lang = l; try { localStorage.setItem('mw.lang', l); } catch (e) {} },
     t(k, v) { let s = (dict[this.lang] && dict[this.lang][k]) ?? dict.bg[k] ?? k; if (v) for (const [a, b] of Object.entries(v)) s = s.split('{' + a + '}').join(b); return s; },
   };

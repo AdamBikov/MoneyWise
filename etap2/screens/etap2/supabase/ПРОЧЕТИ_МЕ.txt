@@ -1,0 +1,7 @@
+Тук сложете снимките от Supabase Dashboard (БЕЗ API ключове и пароли):
+ - tables.png (Table Editor — списък на таблиците)
+ - transactions_structure.png, categories_structure.png, savings_goals_structure.png
+ - transactions_rows.png (тестови записи)
+ - relations.png (Database > Schema Visualizer)
+ - rls.png (Authentication > Policies)
+Стъпките са в SUPABASE_SETUP.md.

@@ -67,6 +67,7 @@ button.pill:hover{color:var(--text);background:var(--glass2)}
 
 /* hero */
 .hero{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:stretch}
+.hero>*{min-width:0}
 .hero-left{display:flex;flex-direction:column;gap:16px}
 .bigcard{height:210px;perspective:1200px;cursor:pointer}
 .bigcard .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
@@ -206,6 +207,6 @@ table.t{width:100%;border-collapse:collapse;font-size:13.5px}table.t td{padding:
   .tx .acts{opacity:1}
   .mobtools{display:flex!important}
 }
-@media (max-width:520px){.g4{grid-template-columns:1fr 1fr}.kpi .glyph{font-size:24px}.goal{flex-direction:column;align-items:flex-start}.monthsw span{min-width:100px}}
+@media (max-width:520px){.quick .hint{display:none}.quick{padding-left:14px}.g4{grid-template-columns:1fr 1fr}.kpi .glyph{font-size:24px}.goal{flex-direction:column;align-items:flex-start}.monthsw span{min-width:100px}}
 .mobtools{display:none;gap:8px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
