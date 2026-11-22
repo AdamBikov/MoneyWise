@@ -2,7 +2,7 @@
 const I18N = (() => {
   const dict = {
     bg: {
-      tagline: 'Личен бюджет', menu: 'Главно меню', theme: 'Тема', demo_mode: 'Демо режим', demo_user: 'Демо потребител',
+      tagline: 'Личен бюджет', menu: 'Главно меню', try_demo: 'Разгледай в демо режим (без вход)', cloud_login: 'Вход със Supabase', theme: 'Тема', demo_mode: 'Демо режим', demo_user: 'Демо потребител',
       auth_sub: 'Влез, за да синхронизираш бюджета си в облака.', password: 'Парола', sign_in: 'Вход', sign_up: 'Регистрация',
       confirm_email: 'Провери имейла си, за да потвърдиш регистрацията.',
       nav_dashboard: 'Табло', nav_transactions: 'Транзакции', nav_budgets: 'Бюджети', nav_goals: 'Цели', nav_analytics: 'Анализ', nav_settings: 'Настройки',
@@ -39,7 +39,7 @@ const I18N = (() => {
       no_free_cat: 'Всички категории вече имат бюджет.', month: 'месец', name: 'Име', icon: 'Икона', target: 'Цел', priority: 'Приоритет', p_low: 'Нисък', p_mid: 'Среден', p_high: 'Висок', remaining: 'Остават', add_cat: 'Нова категория', color: 'Цвят',
     },
     en: {
-      tagline: 'Personal budget', menu: 'Main menu', theme: 'Theme', demo_mode: 'Demo mode', demo_user: 'Demo user',
+      tagline: 'Personal budget', menu: 'Main menu', try_demo: 'Explore in demo mode (no sign-in)', cloud_login: 'Sign in with Supabase', theme: 'Theme', demo_mode: 'Demo mode', demo_user: 'Demo user',
       auth_sub: 'Sign in to sync your budget to the cloud.', password: 'Password', sign_in: 'Sign in', sign_up: 'Sign up',
       confirm_email: 'Check your email to confirm your registration.',
       nav_dashboard: 'Dashboard', nav_transactions: 'Transactions', nav_budgets: 'Budgets', nav_goals: 'Goals', nav_analytics: 'Analytics', nav_settings: 'Settings',

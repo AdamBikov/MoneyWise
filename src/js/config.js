@@ -8,5 +8,5 @@
  */
 window.MW_CONFIG = {
   SUPABASE_URL: "https://opkghyxroeglwrfbbzww.supabase.co",
-  SUPABASE_ANON_KEY: ""
+  SUPABASE_ANON_KEY: "sb_publishable_6M8TqKW9YS6g1z-NDGmsQQ_A9YA7F40"
 };

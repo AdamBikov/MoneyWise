@@ -67,6 +67,7 @@
       <form id="af"><label class="field"><span>Email</span><input name="email" type="email" required autocomplete="email"></label>
       <label class="field"><span>${t('password')}</span><input name="password" type="password" minlength="6" required autocomplete="current-password"></label>
       <div class="actions" style="justify-content:stretch"><button class="btn primary" style="flex:1" data-act="in">${t('sign_in')}</button><button type="button" class="btn" style="flex:1" id="su">${t('sign_up')}</button></div></form>
+      <button type="button" class="btn ghost" id="demo-go" style="margin-top:14px;width:100%">${t('try_demo')}</button>
       <div class="tools" style="justify-content:center;margin-top:16px"><button class="pill ${I18N.lang === 'bg' ? 'on' : ''}" data-lang="bg">BG</button><button class="pill ${I18N.lang === 'en' ? 'on' : ''}" data-lang="en">EN</button></div></div>`;
     app.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { const f = new FormData(document.getElementById('af')); const em = f.get('email'); I18N.set(b.dataset.lang); render(); const e = document.querySelector('[name=email]'); if (e) e.value = em; });
     const go = async mode => {
@@ -75,6 +76,7 @@
       catch (e) { UI.toast(e.message === 'confirm_email' ? t('confirm_email') : e.message, 'err'); }
     };
     document.getElementById('af').onsubmit = e => { e.preventDefault(); go('in'); };
+    document.getElementById('demo-go').onclick = () => { try { localStorage.setItem('mw.demo', '1'); } catch (e) {} location.reload(); };
     document.getElementById('su').onclick = () => { if (document.getElementById('af').reportValidity()) go('up'); };
   }
 
@@ -285,13 +287,15 @@
           <p class="explain" style="margin-top:12px">${t('lang_note')}</p></div>
         <div class="card"><h3>${I('db')} ${t('data_source')}</h3><p><span class="mode ${Store.mode}">${Store.mode === 'cloud' ? I('cloud') + ' Supabase' : I('db') + ' ' + t('demo_mode')}</span></p>
           <p class="explain" style="margin-top:12px">${Store.mode === 'cloud' ? t('cloud_note', { e: esc(Store.user.email) }) : t('local_note')}</p>
-          ${Store.mode === 'cloud' ? `<br><button class="btn danger sm" id="so">${t('sign_out')}</button>` : ''}</div>
+          ${Store.mode === 'cloud' ? `<br><button class="btn danger sm" id="so">${t('sign_out')}</button>` : ''}
+          ${Store.mode === 'local' && Store.cloudAvailable ? `<br><button class="btn sm primary" id="tocloud">${t('cloud_login')}</button>` : ''}</div>
         <div class="card"><h3>${I('db')} ${t('backup')}</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" id="exj">${I('download')} JSON</button><label class="btn sm" for="imj">${I('upload')} ${t('import')}</label><input type="file" id="imj" accept=".json" hidden></div></div>
         <div class="card"><h3>${I('db')} ${t('demo_data')}</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm mint" id="demo">${t('load_demo')}</button><button class="btn sm danger" id="wipe">${t('wipe')}</button></div></div>
       </div>
       <div class="card mt"><h3>${I('tag')} ${t('categories')}<button class="btn sm primary" id="addc" style="margin-left:auto">${I('plus')} ${t('add')}</button></h3>
         <div class="grid g3">${cs.map(c => `<div class="tx" style="margin:0"><div class="ico" style="background:${c.color}33">${c.icon}</div><div class="mid"><b>${esc(catName(c))}</b><small>${c.kind === 'income' ? t('income_s') : t('expense')}</small></div><div class="acts" style="opacity:1"><button class="icon-btn" data-delc="${c.id}">${I('trash')}</button></div></div>`).join('')}</div></div>`;
       view().querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { I18N.set(b.dataset.lang); render(); });
+      const tc = document.getElementById('tocloud'); if (tc) tc.onclick = () => { try { localStorage.removeItem('mw.demo'); } catch (e) {} location.reload(); };
       const so = document.getElementById('so'); if (so) so.onclick = async () => { await Store.signOut(); render(); };
       document.getElementById('exj').onclick = () => download('moneywise-backup.json', 'application/json', Store.exportJSON());
       document.getElementById('imj').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { await Store.importJSON(await f.text()); UI.toast(t('imported')); render(); } catch (er) { UI.toast(t('import_err'), 'err'); } };

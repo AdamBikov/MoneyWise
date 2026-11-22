@@ -18,7 +18,8 @@ python -m http.server 5173
 - ✔ BG по подразбиране + EN (бутон или `?lang=en`); данните не се губят при смяна на езика.
 - ✔ Работеща функция с данни: четене, добавяне, редакция, изтриване, търсене и филтриране на транзакции.
 - ✔ SQL схема с 6 свързани таблици и RLS (`database/schema.sql`); код за връзка със Supabase (тестван с имитация).
-- ☐ Supabase проект и тест с реална база — вж. [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md).
+- ✔ Supabase проект `MoneyWise` със 6 таблици, RLS и права (проверено); приложението се свързва, вход през Supabase Auth. ☐ Снимки от Dashboard — вж. [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md).
+- Бутон „Демо режим (без вход)“ / адрес `?demo=1` — преглед без акаунт.
 - Как учителят тества: [docs/TEACHER_TEST.md](docs/TEACHER_TEST.md). Демо: ☐ *(линк към GitHub Pages)*.
 
 ## Режими на данни

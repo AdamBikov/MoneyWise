@@ -1,8 +1,10 @@
 -- MoneyWise — Supabase (PostgreSQL) схема / schema
--- Изпълнете целия файл в Supabase → SQL Editor.
+-- Приложена е в Supabase проекта (миграции: moneywise_initial_schema + grant_authenticated_table_access).
+-- За нов проект: изпълнете целия файл в Supabase → SQL Editor.
 
 create extension if not exists "pgcrypto";
 
+-- ───────────── Таблици ─────────────
 create table if not exists public.profiles (
   id           uuid primary key references auth.users(id) on delete cascade,
   display_name text,
@@ -19,6 +21,7 @@ begin
   insert into public.profiles (id, display_name) values (new.id, split_part(new.email, '@', 1)) on conflict do nothing;
   return new;
 end $$;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
 
@@ -29,8 +32,8 @@ create table if not exists public.categories (
   kind        text not null check (kind in ('expense','income')),
   name_bg     text not null,
   name_en     text not null,
-  icon        text not null default '🏷️',
-  color       text not null default '#7c5cff',
+  icon        text not null default 'tag',
+  color       text not null default '#5b6cff',
   keywords    text not null default '',
   created_at  timestamptz not null default now()
 );
@@ -59,7 +62,7 @@ create table if not exists public.savings_goals (
   id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name          text not null,
-  icon          text not null default '🎯',
+  icon          text not null default 'flag',
   target_amount numeric(12,2) not null check (target_amount > 0),
   saved_amount  numeric(12,2) not null default 0 check (saved_amount >= 0),
   deadline      date,
@@ -75,21 +78,34 @@ create table if not exists public.goal_contributions (
   contributed_at date not null default current_date
 );
 
-create index if not exists idx_tx_user_date on public.transactions(user_id, tx_date desc);
-create index if not exists idx_tx_category  on public.transactions(category_id);
+create index if not exists idx_tx_user_date     on public.transactions(user_id, tx_date desc);
+create index if not exists idx_tx_category      on public.transactions(category_id);
+create index if not exists idx_budgets_category on public.budgets(category_id);
+create index if not exists idx_goals_user       on public.savings_goals(user_id);
+create index if not exists idx_contrib_goal     on public.goal_contributions(goal_id);
+create index if not exists idx_categories_user  on public.categories(user_id);
 
--- Row Level Security: всеки потребител вижда и променя само своите редове
+-- ───────────── Row Level Security ─────────────
+-- Всеки влязъл потребител вижда и променя само своите редове.
 do $$
-declare t text;
+declare t text; col text;
 begin
   foreach t in array array['profiles','categories','transactions','budgets','savings_goals','goal_contributions'] loop
+    col := case when t = 'profiles' then 'id' else 'user_id' end;
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "own rows" on public.%I', t);
-    execute format('create policy "own rows" on public.%I for all using (%I = auth.uid()) with check (%I = auth.uid())', t, case when t = 'profiles' then 'id' else 'user_id' end, case when t = 'profiles' then 'id' else 'user_id' end);
+    execute format('create policy "own rows" on public.%I for all to authenticated using (%I = (select auth.uid())) with check (%I = (select auth.uid()))', t, col, col);
   end loop;
 end $$;
 
--- Изглед: месечно обобщение (ползва се за проверка на данните и в SQL защита)
+-- ───────────── Права (GRANT) ─────────────
+-- В нови Supabase проекти ролите нямат автоматични права върху таблиците: без този блок
+-- приложението получава „permission denied“. Анонимни (невлезли) потребители нямат достъп до нищо.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.profiles, public.categories, public.transactions,
+      public.budgets, public.savings_goals, public.goal_contributions to authenticated;
+
+-- ───────────── Изглед ─────────────
 create or replace view public.monthly_summary with (security_invoker = true) as
 select user_id,
        to_char(tx_date, 'YYYY-MM') as month,
@@ -98,3 +114,4 @@ select user_id,
        sum(case when type = 'income' then amount else -amount end) as net
 from public.transactions
 group by user_id, to_char(tx_date, 'YYYY-MM');
+grant select on public.monthly_summary to authenticated;

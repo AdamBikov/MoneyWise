@@ -1,7 +1,8 @@
 # Структура на таблиците (Supabase / PostgreSQL)
 
 Източник: [`database/schema.sql`](../database/schema.sql). Диаграма: [ER_DIAGRAM.md](ER_DIAGRAM.md).
-Снимки от Supabase Dashboard: `docs/screens/etap2/supabase/` ☐ *(правят се след създаване на проекта — вж. SUPABASE_SETUP.md)*
+**Състояние:** проектът `MoneyWise` (регион eu-west-1, Postgres 17) е създаден и схемата е приложена — проверено на 22.11.2026: 6 таблици, всички с включен RLS, Security Advisor без забележки.
+Снимки от Supabase Dashboard: `docs/screens/etap2/supabase/` ☐ *(правят се от акаунта на екипа — вж. SUPABASE_SETUP.md §5)*
 
 ## Логически свързаните таблици (минимумът са 3; имаме 6)
 Основната верига на данните: **categories → transactions** и **categories → budgets**, **savings_goals → goal_contributions**.
@@ -41,8 +42,9 @@
 ### profiles
 `profiles(id PK = auth.users.id, display_name, role, locale, currency)` — създава се автоматично при регистрация (тригер `on_auth_user_created`).
 
-## Защита (RLS)
-На всички таблици е включен Row Level Security с политика `own rows`: потребителят чете и променя само редове, където `user_id = auth.uid()` (за `profiles`: `id = auth.uid()`). Няма публичен достъп до лични данни.
+## Защита (RLS и права)
+На всички таблици е включен Row Level Security с политика `own rows` (само за влезли потребители): чете и променя се само редове, където `user_id = auth.uid()` (за `profiles`: `id = auth.uid()`). Ролята `anon` няма достъп до таблиците; `authenticated` има GRANT, а RLS ограничава редовете. Няма публичен достъп до лични данни.
+Проверено с тест: потребител 2 вижда 0 редове на потребител 1; запис с чужд `user_id` е блокиран; сума ≤ 0 е блокирана от CHECK.
 
 ## Какво се променя спрямо ER диаграмата от Етап 1
 Нищо в структурата — диаграмата от Етап 1 вече беше приведена към тази схема (виж промените в PROJECT_PLAN §0).
