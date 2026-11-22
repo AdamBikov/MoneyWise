@@ -73,7 +73,15 @@ const Store = (() => {
 
     async init() {
       const c = window.MW_CONFIG || {};
-      if (c.SUPABASE_URL && c.SUPABASE_ANON_KEY && window.supabase) {
+      // ?demo=1 (или запазен избор) принуждава демо режим без вход — удобно за преглед без акаунт; ?demo=0 го изключва
+      let demo = false;
+      try {
+        const q = new URLSearchParams(location.search).get('demo');
+        if (q === '1') localStorage.setItem('mw.demo', '1'); else if (q === '0') localStorage.removeItem('mw.demo');
+        demo = localStorage.getItem('mw.demo') === '1';
+      } catch (e) {}
+      this.cloudAvailable = !!(c.SUPABASE_URL && c.SUPABASE_ANON_KEY && window.supabase);
+      if (this.cloudAvailable && !demo) {
         this.mode = 'cloud';
         this.sb = window.supabase.createClient(c.SUPABASE_URL, c.SUPABASE_ANON_KEY);
         const { data } = await this.sb.auth.getSession();

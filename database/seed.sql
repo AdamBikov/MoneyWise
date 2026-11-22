@@ -71,5 +71,8 @@ begin
     (uid, g2, 150, (current_date - interval '20 days')::date);
 end $$;
 
+-- Функцията е само за SQL Editor — затваряме я за достъп през API:
+revoke execute on function public.seed_demo_data(uuid) from public, anon, authenticated;
+
 -- Проверка след изпълнение (заменете UUID):
 -- select to_char(tx_date,'YYYY-MM') as month, type, sum(amount) from transactions where user_id = 'UUID' group by 1,2 order by 1;
